@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Buster</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #6a11cb;
+            --primary-light: #8e33ff;
+            --secondary: #2575fc;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --bg-light: #f5f5f7;
+            --card-bg: #ffffff;
+            --gradient: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--gradient);
+            color: var(--text-light);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-header i {
+            margin-right: 10px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-info .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--gradient);
+        }
+
+        .card h3 {
+            margin-bottom: 15px;
+            font-size: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card p {
+            color: #666;
+            margin-bottom: 10px;
+            line-height: 1.5;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Chat Interface Styles */
+        .chat-container {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.15);
+            flex-direction: column;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: var(--gradient);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            margin-bottom: 10px;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .bot-message {
+            background-color: #f0f0f0;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .user-message {
+            background: var(--gradient);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .chat-input button {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 15px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+
+        /* Game Interface Styles */
+        .game-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 800px;
+            height: 80%;
+            max-height: 600px;
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .game-header {
+            background: var(--gradient);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-game {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .game-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .scenario {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .scenario h3 {
+            margin-bottom: 10px;
+        }
+
+        .scenario p {
+            margin-bottom: 15px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 12px 15px;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .option:hover {
+            background-color: #e0e0e0;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .next-button {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* Leaderboard Styles */
+        .leaderboard-container {
+            display: none;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .leaderboard-table th,
+        .leaderboard-table td {
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        .leaderboard-table th {
+            background: var(--gradient);
+            color: white;
+        }
+
+        .leaderboard-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .leaderboard-table tr:hover {
+            background-color: #ddd;
+        }
+
+        .rank-1 {
+            background-color: rgba(255, 215, 0, 0.2);
+        }
+
+        .rank-2 {
+            background-color: rgba(192, 192, 192, 0.2);
+        }
+
+        .rank-3 {
+            background-color: rgba(205, 127, 50, 0.2);
+        }
+
+        /* Transactions Styles */
+        .transactions-container {
+            display: none;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            transition: all 0.2s ease;
+        }
+
+        .transaction-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .transaction-details {
+            flex: 1;
+        }
+
+        .transaction-amount {
+            font-weight: bold;
+        }
+
+        .transaction-date {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .transaction-status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-safe {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .status-suspicious {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .status-fraud {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        /* Rewards Styles */
+        .rewards-container {
+            display: none;
+        }
+
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .reward-item {
+            background-color: #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .reward-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .reward-image {
+            height: 150px;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+        }
+
+        .reward-details {
+            padding: 15px;
+        }
+
+        .reward-name {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .reward-cost {
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .reward-button {
+            width: 100%;
+            padding: 8px;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Settings Styles */
+        .settings-container {
+            display: none;
+        }
+
+        .settings-section {
+            margin-bottom: 30px;
+        }
+
+        .settings-section h3 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .settings-option {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .settings-option label {
+            flex: 1;
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background: var(--gradient);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        /* Modal Backdrop */
+        .backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 90;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                padding: 15px;
+            }
+
+            .sidebar-header {
+                margin-bottom: 20px;
+            }
+
+            .nav-links {
+                display: flex;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .nav-link {
+                width: 48%;
+                margin-bottom: 10px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .cards-container {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-container {
+                width: 90%;
+                right: 5%;
+                bottom: 5%;
+            }
+
+            .game-container {
+                width: 90%;
+                height: 90%;
+            }
+        }
+
+        /* Animation for cards */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-shield-alt"></i>
+            Fraud Buster
+        </div>
+        <a href="#dashboard" class="nav-link active" data-section="dashboard">
+            <i class="fas fa-chart-line"></i>
+            Dashboard
+        </a>
+        <a href="#chatbot" class="nav-link" data-section="chatbot">
+            <i class="fas fa-robot"></i>
+            Chatbot
+        </a>
+        <a href="#game" class="nav-link" data-section="game">
+            <i class="fas fa-gamepad"></i>
+            Fraud Buster Game
+        </a>
+        <a href="#leaderboard" class="nav-link" data-section="leaderboard">
+            <i class="fas fa-trophy"></i>
+            Leaderboard
+        </a>
+        <a href="#rewards" class="nav-link" data-section="rewards">
+            <i class="fas fa-gift"></i>
+            Rewards
+        </a>
+        <a href="#settings" class="nav-link" data-section="settings">
+            <i class="fas fa-cog"></i>
+            Settings
+        </a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1 class="page-title">Dashboard</h1>
+            <div class="user-info">
+                <span>Welcome, User!</span>
+                <div class="avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section-content">
+            <div class="cards-container">
+                <div class="card" id="chatbot-card">
+                    <h3>AI Fraud Chatbot</h3>
+                    <p>Engage with our AI assistant to verify and secure your transactions in real time.</p>
+                </div>
+                <div class="card" id="game-card">
+                    <h3>Fraud Buster Game</h3>
+                    <p>Play interactive scenarios to learn and earn rewards for spotting scams.</p>
+                </div>
+                <div class="card" id="leaderboard-card">
+                    <h3>Leaderboard</h3>
+                    <p>See how you stack up against other fraud fighters. Compete and climb the ranks!</p>
+                </div>
+                <div class="card" id="rewards-card">
+                    <h3>Rewards</h3>
+                    <p>Redeem points for badges, discounts, and exclusive in-app upgrades.</p>
+                </div>
+                <div class="card" id="transactions-card">
+                    <h3>Recent Transactions</h3>
+                    <p>Review your latest transactions history and fraud checks.</p>
+                </div>
+                <div class="card" id="settings-card">
+                    <h3>Settings</h3>
+                    <p>Manage your account, linked payment methods, and security preferences.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chatbot Section -->
+        <div id="chatbot-section" class="section-content" style="display: none;">
+            <h2>AI Fraud Chatbot</h2>
+            <p>Use our AI assistant to help you spot fraud and secure your transactions. Click the button below to start a conversation.</p>
+            <button id="open-chat-btn" style="margin-top: 20px; padding: 10px 20px; background: var(--gradient); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                <i class="fas fa-comments"></i> Start Chat
+            </button>
+        </div>
+
+        <!-- Game Section -->
+        <div id="game-section" class="section-content" style="display: none;">
+            <h2>Fraud Buster Game</h2>
+            <p>Test your fraud detection skills with interactive scenarios. Earn points and rewards for making the right choices!</p>
+            <button id="start-game-btn" style="margin-top: 20px; padding: 10px 20px; background: var(--gradient); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                <i class="fas fa-play"></i> Start Game
+            </button>
+        </div>
+
+        <!-- Leaderboard Section -->
+        <div id="leaderboard-section" class="section-content" style="display: none;">
+            <h2>Leaderboard</h2>
+            <p>See how you rank against other fraud fighters. Complete games and challenges to climb the ranks!</p>
+            
+            <div class="leaderboard-container" style="display: block;">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>User</th>
+                            <th>Points</th>
+                            <th>Level</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="rank-1">
+                            <td>1</td>
+                            <td>ScamSleuth92</td>
+                            <td>5,780</td>
+                            <td>Fraud Master</td>
+                        </tr>
+                        <tr class="rank-2">
+                            <td>2</td>
+                            <td>FraudFighter23</td>
+                            <td>5,450</td>
+                            <td>Expert Detective</td>
+                        </tr>
+                        <tr class="rank-3">
+                            <td>3</td>
+                            <td>CyberShield</td>
+                            <td>4,990</td>
+                            <td>Security Pro</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>TruthSeeker</td>
+                            <td>4,120</td>
+                            <td>Vigilant Guardian</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>DataDefender</td>
+                            <td>3,845</td>
+                            <td>Security Specialist</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>You</td>
+                            <td>3,200</td>
+                            <td>Rookie Investigator</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>SafetyFirst</td>
+                            <td>2,980</td>
+                            <td>Alert Citizen</td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>DigitalGuard</td>
+                            <td>2,750</td>
+                            <td>Watchful Eye</td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>SecureSpotter</td>
+                            <td>2,600</td>
+                            <td>Fraud Spotter</td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>CyberSentry</td>
+                            <td>2,455</td>
+                            <td>Beginner</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Rewards Section -->
+        <div id="rewards-section" class="section-content" style="display: none;">
+            <h2>Rewards</h2>
+            <p>Redeem your points for exclusive rewards and benefits. The more fraud you detect, the more points you earn!</p>
+            
+            <div class="rewards-container" style="display: block;">
+                <div class="rewards-grid">
+                    <div class="reward-item">
+                        <div class="reward-image">
+                            <i class="fas fa-medal"></i>
+                        </div>
+                        <div class="reward-details">
+                            <div class="reward-name">Gold Badge</div>
+                            <div class="reward-cost">1,000 points</div>
+                            <button class="reward-button">Redeem</button>
+                        </div>
+                    </div>
+                    <div class="reward-item">
+                        <div class="reward-image">
+                            <i class="fas fa-crown"></i>
+                        </div>
+                        <div class="reward-details">
+                            <div class="reward-name">Exclusive Profile Theme</div>
+                            <div class="reward-cost">2,500 points</div>
+                            <button class="reward-button">Redeem</button>
+                        </div>
+                    </div>
+                    <div class="reward-item">
+                        <div class="reward-image">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="reward-details">
+                            <div class="reward-name">10% App Discount</div>
+                            <div class="reward-cost">5,000 points</div>
+                            <button class="reward-button">Redeem</button>
+                        </div>
+                    </div>
+                    <div class="reward-item">
+                        <div class="reward-image">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <div class="reward-details">
+                            <div class="reward-name">Premium Account (1 month)</div>
+                            <div class="reward-cost">7,500 points</div>
+                            <button class="reward-button">Redeem</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Section -->
+        <div id="transactions-section" class="section-content" style="display: none;">
+            <h2>Recent Transactions</h2>
+            <p>Review your recent transactions and their security status.</p>
+            
+            <div class="transactions-container" style="display: block;">
+                <div class="transaction-item">
+                    <div class="transaction-details">
+                        <div class="transaction-title">Online Store Purchase</div>
+                        <div class="transaction-date">April 26, 2025</div>
+                    </div>
+                    <div class="transaction-amount">$89.99</div>
+                    <div class="transaction-status status-safe">Safe</div>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-details">
+                        <div class="transaction-title">Money Transfer to John</div>
+                        <div class="transaction-date">April 25, 2025</div>
+                    </div>
+                    <div class="transaction-amount">$250.00</div>
+                    <div class="transaction-status status-safe">Safe</div>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-details">
+                        <div class="transaction-title">Subscription Renewal</div>
+                        <div class="transaction-date">April 23, 2025</div>
+                    </div>
+                    <div class="transaction-amount">$15.99</div>
+                    <div class="transaction-status status-safe">Safe</div>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-details">
+                        <div class="transaction-title">Unknown Vendor</div>
+                        <div class="transaction-date">April 22, 2025</div>
+                    </div>
+                    <div class="transaction-amount">$199.99</div>
+                    <div class="transaction-status status-suspicious">Suspicious</div>
+                </div>
+                <div class="transaction-item">
+                    <div class="transaction-details">
+                        <div class="transaction-title">International Transfer</div>
+                        <div class="transaction-date">April 20, 2025</div>
+                    </div>
+                    <div class="transaction-amount">$500.00</div>
+                    <div class="transaction-status status-fraud">Blocked</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div id="settings-section" class="section-content" style="display: none;">
+            <h2>Settings</h2>
+            <p>Manage your account settings and security preferences.</p>
+            
+            <div class="settings-container" style="display: block;">
+                <div class="settings-section">
+                    <h3>Account Settings</h3>
+                    <div class="settings-option">
+                        <label>Email Notifications</label>
+                        <label class="toggle">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-option">
+                        <label>Push Notifications</label>
+                        <label class="toggle">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Security Settings</h3>
+                    <div class="settings-option">
+                        <label>Two-Factor Authentication</label>
+                        <label class="toggle">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-option">
+                        <label>Biometric Login</label>
+                        <label class="toggle">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="settings-option">
+                        <label>Transaction Alerts</label>
+                        <label class="toggle">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Interface Modal -->
+    <div class="chat-container" id="chat-modal">
+        <div class="chat-header">
+            <h3>AI Fraud Assistant</h3>
+            <button class="close-chat">×</button>
+        </div>
+        <div class="chat-messages">
+            <div class="message bot-message">Hello! I'm your AI fraud detection assistant. How can I help you today?</div>
+        </div>
+        <div class="chat-input">
+            <input type="text" placeholder="Type your message here..." id="chat-input-field">
+            <button id="send-message">Send</button>
+        </div>
+    </div>
+
+    <!-- Game Interface Modal -->
+    <div class="game-container" id="game-modal">
+        <div class="game-header">
+            <h3>Fraud Buster Game</h3>
+            <button class="close-game">×</button>
+        </div>
+        <div class="game-content">
+            <div class="scenario" id="scenario-container">
+                <h3>Scenario #1: Suspicious Email</h3>
+                <p>You received an email that states:</p>
+                <p><em>"Dear Customer, We've detected unusual activity in your account. Please verify your information by clicking the link below and entering your username, password, and banking details."</em></p>
+                <p>What would you do?</p>
+                <div class="options">
+                    <div class="option" data-correct="false">Click the link and update my information to secure my account</div>
+                    <div class="option" data-correct="true">Don't click the link and contact my bank through their official website or phone number</div>
+                    <div class="option" data-correct="false">Reply to the email asking for more information</div>
+                </div>
+                <div class="result"></div>
+                <button class="next-button">Next Scenario</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Backdrop -->
+    <div class="backdrop" id="modal-backdrop"></div>
+
+    <script>
+        // DOM Elements
+        const navLinks = document.querySelectorAll('.nav-link');
+        const sectionContents = document.querySelectorAll('.section-content');
+        const pageTitle = document.querySelector('.page-title');
+        
+        // Card elements
+        const chatbotCard = document.getElementById('chatbot-card');
+        const gameCard = document.getElementById('game-card');
+        const leaderboardCard = document.getElementById('leaderboard-card');
+        const rewardsCard = document.getElementById('rewards-card');
+        const transactionsCard = document.getElementById('transactions-card');
+        const settingsCard = document.getElementById('settings-card');
+        
+        // Modal elements
+        const chatModal = document.getElementById('chat-modal');
+        const gameModal = document.getElementById('game-modal');
+        const modalBackdrop = document.getElementById('modal-backdrop');
+        const openChatBtn = document.getElementById('open-chat-btn');
+        const closeChat = document.querySelector('.close-chat');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const closeGame = document.querySelector('.close-game');
+        
+        // Chat elements
+        const chatMessages = document.querySelector('.chat-messages');
+        const chatInputField = document.getElementById('chat-input-field');
+        const sendMessageBtn = document.getElementById('send-message');
+        
+        // Game elements
+        const scenarioContainer = document.getElementById('scenario-container');
+        const options = document.querySelectorAll('.option');
+        const resultDiv = document.querySelector('.result');
+        const nextButton = document.querySelector('.next-button');
+        
+        // Current active section
+        let currentSection = 'dashboard';
+        
+        // Navigation functionality
+        function navigateToSection(sectionId) {
+            // Update active nav link
+            navLinks.forEach(link => {
+                if (link.dataset.section === sectionId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+            
+            // Show selected section, hide others
+            sectionContents.forEach(section => {
+                if (section.id === `${sectionId}-section`) {
+                    section.style.display = 'block';
+                } else {
+                    section.style.display = 'none';
+                }
+            });
+            
+            // Update page title
+            pageTitle.textContent = sectionId.charAt(0).toUpperCase() + sectionId.slice(1);
+            
+            // Update current section
+            currentSection = sectionId;
+        }
+        
+        // Add click event to nav links
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = link.dataset.section;
+                navigateToSection(sectionId);
+            });
+        });
+        
+        // Card click handlers
+        chatbotCard.addEventListener('click', () => navigateToSection('chatbot'));
+        gameCard.addEventListener('click', () => navigateToSection('game'));
+        leaderboardCard.addEventListener('click', () => navigateToSection('leaderboard'));
+        rewardsCard.addEventListener('click', () => navigateToSection('rewards'));
+        transactionsCard.addEventListener('click', () => navigateToSection('transactions'));
+        settingsCard.addEventListener('click', () => navigateToSection('settings'));
+        
+        // Chat modal functionality
+        function openChatModal() {
+            chatModal.style.display = 'flex';
+            modalBackdrop.style.display = 'block';
+        }
+        
+        function closeChatModal() {
+            chatModal.style.display = 'none';
+            modalBackdrop.style.display = 'none';
+        }
+        
+        openChatBtn.addEventListener('click', openChatModal);
+        closeChat.addEventListener('click', closeChatModal);
+        chatbotCard.addEventListener('click', openChatModal);
+        
+        // Game modal functionality
+        function openGameModal() {
+            gameModal.style.display = 'flex';
+            modalBackdrop.style.display = 'block';
+        }
+        
+        function closeGameModal() {
+            gameModal.style.display = 'none';
+            modalBackdrop.style.display = 'none';
+        }
+        
+        startGameBtn.addEventListener('click', openGameModal);
+        closeGame.addEventListener('click', closeGameModal);
+        
+        // Chat functionality
+        function addMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isUser ? 'user-message' : 'bot-message');
+            messageDiv.textContent = message;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function botResponse(userMessage) {
+            // Simple bot responses based on user input
+            const responses = {
+                'hi': 'Hello! How can I help you with fraud detection today?',
+                'hello': 'Hi there! I can help you identify potential fraud. What questions do you have?',
+                'hey': 'Hey! Looking to learn about spotting fraud?',
+                'help': 'I can help you identify potential fraud in transactions, review suspicious activity, or learn about common scams. What would you like to know?',
+                'scam': 'Common scams include phishing emails, fake websites, phone scams, and identity theft attempts. Always verify before sharing personal information.',
+                'phishing': 'Phishing scams try to trick you into revealing personal info through fake emails or websites. Always verify the sender and never click suspicious links.',
+                'suspicious': 'If you notice a suspicious transaction, don\'t panic. Contact your bank immediately through their official channels and report the activity.',
+                'secure': 'To keep your accounts secure, use strong passwords, enable two-factor authentication, and regularly monitor your statements for unusual activity.',
+                'fraud': 'Fraud can come in many forms. The most common signs include unexpected emails about account problems, urgent requests for money, or deals that seem too good to be true.',
+                'safe': 'To stay safe online, never share personal information in response to unsolicited requests, use secure and unique passwords, and keep your software updated.',
+                'password': 'Strong passwords should be at least 12 characters with a mix of letters, numbers, and symbols. Never reuse passwords across important accounts.',
+                'transaction': 'I can help verify if a transaction looks suspicious. What details can you share about it?',
+                'credit card': 'If you suspect credit card fraud, contact your card issuer immediately to freeze your card and dispute any unauthorized charges.',
+                'bank': 'Always access your bank through official apps or by typing the URL directly. Never click links in emails claiming to be from your bank.',
+                'email': 'Be wary of emails requesting personal information or containing urgent action items. Legitimate companies won\'t ask for sensitive information via email.',
+                'phone': 'Be cautious of unexpected calls claiming to be from banks or government agencies. Don\'t share personal information if you didn\'t initiate the call.',
+                'thanks': 'You\'re welcome! Feel free to return if you have any other questions about fraud detection.',
+                'thank you': 'Glad I could help! Stay vigilant and safe online!'
+            };
+            
+            // Check for matches in our response dictionary
+            const lowerMsg = userMessage.toLowerCase();
+            let botMsg = 'I\'m not sure how to help with that. Would you like to learn about common scams or how to secure your accounts?';
+            
+            // Check each key in our responses
+            for (const key in responses) {
+                if (lowerMsg.includes(key)) {
+                    botMsg = responses[key];
+                    break;
+                }
+            }
+            
+            // Add a slight delay to make it feel more natural
+            setTimeout(() => {
+                addMessage(botMsg);
+            }, 800);
+        }
+        
+        // Send message when button is clicked
+        sendMessageBtn.addEventListener('click', () => {
+            const message = chatInputField.value.trim();
+            if (message) {
+                addMessage(message, true);
+                chatInputField.value = '';
+                botResponse(message);
+            }
+        });
+        
+        // Send message when Enter key is pressed
+        chatInputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const message = chatInputField.value.trim();
+                if (message) {
+                    addMessage(message, true);
+                    chatInputField.value = '';
+                    botResponse(message);
+                }
+            }
+        });
+        
+        // Game functionality
+        const scenarios = [
+            {
+                title: 'Scenario #1: Suspicious Email',
+                description: 'You received an email that states:</p><p><em>"Dear Customer, We\'ve detected unusual activity in your account. Please verify your information by clicking the link below and entering your username, password, and banking details."</em>',
+                question: 'What would you do?',
+                options: [
+                    { text: 'Click the link and update my information to secure my account', correct: false },
+                    { text: 'Don\'t click the link and contact my bank through their official website or phone number', correct: true },
+                    { text: 'Reply to the email asking for more information', correct: false }
+                ],
+                explanation: {
+                    correct: 'Correct! This is a phishing attempt. Banks never ask for full account details or passwords via email.',
+                    incorrect: 'That\'s not the safest choice. This is a phishing scam. Always contact your bank directly through official channels.'
+                }
+            },
+            {
+                title: 'Scenario #2: Unusual Phone Call',
+                description: 'You receive a call from someone claiming to be from tech support. They say your computer is sending error messages and they need remote access to fix it.',
+                question: 'How do you respond?',
+                options: [
+                    { text: 'Give them access to your computer since they\'re trying to help', correct: false },
+                    { text: 'Hang up immediately and block the number', correct: true },
+                    { text: 'Ask them to provide more details about the errors', correct: false }
+                ],
+                explanation: {
+                    correct: 'Correct! This is a common tech support scam. Legitimate tech companies don\'t call you to fix problems you haven\'t reported.',
+                    incorrect: 'That\'s risky. This is a classic tech support scam. Never give strangers access to your computer.'
+                }
+            },
+            {
+                title: 'Scenario #3: Social Media Message',
+                description: 'A friend sends you a message on social media: "Hey! I\'m stuck abroad and my wallet was stolen. Can you wire me $1000 ASAP? I\'ll pay you back when I get home."',
+                question: 'What\'s your next step?',
+                options: [
+                    { text: 'Send the money right away to help your friend', correct: false },
+                    { text: 'Call your friend directly using the phone number you already have for them', correct: true },
+                    { text: 'Ask them for details about where to send the money', correct: false }
+                ],
+                explanation: {
+                    correct: 'Great job! This is likely an account takeover scam. Always verify urgent money requests through a different communication method.',
+                    incorrect: 'Be careful! This is likely a scam where someone has hacked your friend\'s account. Always verify through a separate channel.'
+                }
+            }
+        ];
+        
+        let currentScenario = 0;
+        
+        function loadScenario(index) {
+            const scenario = scenarios[index];
+            let scenarioHTML = `
+                <h3>${scenario.title}</h3>
+                <p>${scenario.description}</p>
+                <p>${scenario.question}</p>
+                <div class="options">
+            `;
+            
+            scenario.options.forEach(option => {
+                scenarioHTML += `<div class="option" data-correct="${option.correct}">${option.text}</div>`;
+            });
+            
+            scenarioHTML += `
+                </div>
+                <div class="result"></div>
+                <button class="next-button">Next Scenario</button>
+            `;
+            
+            scenarioContainer.innerHTML = scenarioHTML;
+            
+            // Reset result and next button
+            const resultDiv = scenarioContainer.querySelector('.result');
+            resultDiv.style.display = 'none';
+            
+            const nextButton = scenarioContainer.querySelector('.next-button');
+            nextButton.style.display = 'none';
+            
+            // Add event listeners to new options
+            const options = scenarioContainer.querySelectorAll('.option');
+            options.forEach(option => {
+                option.addEventListener('click', handleOptionClick);
+            });
+            
+            // Add event listener to next button
+            nextButton.addEventListener('click', () => {
+                currentScenario = (currentScenario + 1) % scenarios.length;
+                loadScenario(currentScenario);
+            });
+        }
+        
+        function handleOptionClick(e) {
+            const isCorrect = e.target.dataset.correct === 'true';
+            const resultDiv = scenarioContainer.querySelector('.result');
+            const nextButton = scenarioContainer.querySelector('.next-button');
+            const options = scenarioContainer.querySelectorAll('.option');
+            
+            // Disable further clicks
+            options.forEach(opt => {
+                opt.removeEventListener('click', handleOptionClick);
+                opt.style.opacity = '0.7';
+                opt.style.cursor = 'default';
+            });
+            
+            // Show correct or incorrect feedback
+            e.target.style.fontWeight = 'bold';
+            resultDiv.style.display = 'block';
+            nextButton.style.display = 'block';
+            
+            if (isCorrect) {
+                resultDiv.textContent = scenarios[currentScenario].explanation.correct;
+                resultDiv.className = 'result correct';
+                e.target.style.backgroundColor = '#d4edda';
+            } else {
+                resultDiv.textContent = scenarios[currentScenario].explanation.incorrect;
+                resultDiv.className = 'result incorrect';
+                e.target.style.backgroundColor = '#f8d7da';
+                
+                // Highlight the correct answer
+                options.forEach(opt => {
+                    if (opt.dataset.correct === 'true') {
+                        opt.style.backgroundColor = '#d4edda';
+                    }
+                });
+            }
+        }
+        
+        // Initialize the first scenario when game starts
+        startGameBtn.addEventListener('click', () => {
+            loadScenario(currentScenario);
+        });
+        
+        // Toggle settings
+        const toggles = document.querySelectorAll('.toggle input');
+        toggles.forEach(toggle => {
+            toggle.addEventListener('change', () => {
+                // Simulate saving settings
+                const settingName = toggle.parentElement.previousElementSibling.textContent;
+                const status = toggle.checked ? 'enabled' : 'disabled';
+                console.log(`Setting "${settingName}" ${status}`);
+            });
+        });
+        
+        // Reward buttons
+        const rewardButtons = document.querySelectorAll('.reward-button');
+        rewardButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                const rewardName = e.target.previousElementSibling.previousElementSibling.textContent;
+                const pointCost = e.target.previousElementSibling.textContent;
+                alert(`You're about to redeem "${rewardName}" for ${pointCost}. In a real app, this would complete the transaction.`);
+            });
+        });
+        
+        // Make transaction items clickable
+        const transactionItems = document.querySelectorAll('.transaction-item');
+        transactionItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const title = item.querySelector('.transaction-title').textContent;
+                const status = item.querySelector('.transaction-status').textContent;
+                
+                if (status === 'Safe') {
+                    alert(`Transaction "${title}" details: This transaction was verified and is safe.`);
+                } else if (status === 'Suspicious') {
+                    alert(`Transaction "${title}" details: This transaction has unusual patterns and requires your verification. In a real app, you would be able to approve or report it.`);
+                } else {
+                    alert(`Transaction "${title}" details: This transaction was automatically blocked due to high fraud risk. In a real app, you could review details and appeal if needed.`);
+                }
+            });
+        });
+        
+        // Make cards more visually appealing with pulse effect
+        const cards = document.querySelectorAll('.card');
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.classList.add('pulse');
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.classList.remove('pulse');
+            });
+        });
+        
+        // Allow clicking outside modal to close it
+        modalBackdrop.addEventListener('click', () => {
+            closeChatModal();
+            closeGameModal();
+        });
+        
+        // Initialize the app with dashboard view
+        navigateToSection('dashboard');
+    </script>
+</body>
+</html>
